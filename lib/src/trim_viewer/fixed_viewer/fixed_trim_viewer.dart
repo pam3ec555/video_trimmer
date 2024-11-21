@@ -136,6 +136,7 @@ class FixedTrimViewer extends StatefulWidget {
 class _FixedTrimViewerState extends State<FixedTrimViewer>
     with TickerProviderStateMixin {
   final _trimmerAreaKey = GlobalKey();
+
   File? get _videoFile => widget.trimmer.currentVideoFile;
 
   double _videoStartPos = 0.0;
@@ -180,6 +181,7 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
   /// Whether the dragging is allowed. Dragging is ignore if the user's gesture is outside
   /// of the frame, to make the UI more realistic.
   bool _allowDrag = true;
+  bool _controllerIsInited = false;
 
   @override
   void initState() {
@@ -190,77 +192,92 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
     _thumbnailViewerH = widget.viewerHeight;
     log('thumbnailViewerW: $_thumbnailViewerW');
     SchedulerBinding.instance.addPostFrameCallback((_) {
-      final renderBox =
-          _trimmerAreaKey.currentContext?.findRenderObject() as RenderBox?;
-      final trimmerActualWidth = renderBox?.size.width;
-      log('RENDER BOX: $trimmerActualWidth');
-      if (trimmerActualWidth == null) return;
-      _thumbnailViewerW = trimmerActualWidth;
-      _initializeVideoController();
-      videoPlayerController.seekTo(const Duration(milliseconds: 0));
-      _numberOfThumbnails = trimmerActualWidth ~/ _thumbnailViewerH;
-      log('numberOfThumbnails: $_numberOfThumbnails');
-      log('thumbnailViewerW: $_thumbnailViewerW');
-      setState(() {
-        _thumbnailViewerW = _numberOfThumbnails * _thumbnailViewerH;
+      _initViewer();
+    });
+  }
 
-        final FixedThumbnailViewer thumbnailWidget = FixedThumbnailViewer(
-          videoFile: _videoFile!,
-          videoDuration: _videoDuration,
-          fit: widget.areaProperties.thumbnailFit,
-          thumbnailHeight: _thumbnailViewerH,
-          numberOfThumbnails: _numberOfThumbnails,
-          quality: widget.areaProperties.thumbnailQuality,
-          onThumbnailLoadingComplete: widget.onThumbnailLoadingComplete,
-        );
-        this.thumbnailWidget = thumbnailWidget;
-        Duration totalDuration = videoPlayerController.value.duration;
-
-        if (widget.maxVideoLength > const Duration(milliseconds: 0) &&
-            widget.maxVideoLength < totalDuration) {
-          if (widget.maxVideoLength < totalDuration) {
-            fraction = widget.maxVideoLength.inMilliseconds /
-                totalDuration.inMilliseconds;
-
-            maxLengthPixels = _thumbnailViewerW * fraction!;
-          }
-        } else {
-          maxLengthPixels = _thumbnailViewerW;
-        }
-
-        _videoEndPos = fraction != null
-            ? _videoDuration.toDouble() * fraction!
-            : _videoDuration.toDouble();
-
-        widget.onChangeEnd!(_videoEndPos);
-
-        _endPos = Offset(
-          maxLengthPixels != null ? maxLengthPixels! : _thumbnailViewerW,
-          _thumbnailViewerH,
-        );
-
-        // Defining the tween points
-        _linearTween = Tween(begin: _startPos.dx, end: _endPos.dx);
-        _animationController = AnimationController(
-          vsync: this,
-          duration:
-              Duration(milliseconds: (_videoEndPos - _videoStartPos).toInt()),
-        );
-
-        _scrubberAnimation = _linearTween.animate(_animationController!)
-          ..addListener(() {
-            setState(() {});
-          })
-          ..addStatusListener((status) {
-            if (status == AnimationStatus.completed) {
-              _animationController!.stop();
-            }
-          });
+  @override
+  didUpdateWidget(FixedTrimViewer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.viewerWidth != widget.viewerWidth) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        _initViewer();
       });
+    }
+  }
+
+  void _initViewer() {
+    final renderBox =
+    _trimmerAreaKey.currentContext?.findRenderObject() as RenderBox?;
+    final trimmerActualWidth = renderBox?.size.width;
+    log('RENDER BOX: $trimmerActualWidth');
+    if (trimmerActualWidth == null) return;
+    _thumbnailViewerW = trimmerActualWidth;
+    _initializeVideoController();
+    videoPlayerController.seekTo(const Duration(milliseconds: 0));
+    _numberOfThumbnails = trimmerActualWidth ~/ _thumbnailViewerH;
+    log('numberOfThumbnails: $_numberOfThumbnails');
+    log('thumbnailViewerW: $_thumbnailViewerW');
+    setState(() {
+      _thumbnailViewerW = _numberOfThumbnails * _thumbnailViewerH;
+
+      final FixedThumbnailViewer thumbnailWidget = FixedThumbnailViewer(
+        videoFile: _videoFile!,
+        videoDuration: _videoDuration,
+        fit: widget.areaProperties.thumbnailFit,
+        thumbnailHeight: _thumbnailViewerH,
+        numberOfThumbnails: _numberOfThumbnails,
+        quality: widget.areaProperties.thumbnailQuality,
+        onThumbnailLoadingComplete: widget.onThumbnailLoadingComplete,
+      );
+      this.thumbnailWidget = thumbnailWidget;
+      Duration totalDuration = videoPlayerController.value.duration;
+
+      if (widget.maxVideoLength > const Duration(milliseconds: 0) &&
+          widget.maxVideoLength < totalDuration) {
+        if (widget.maxVideoLength < totalDuration) {
+          fraction = widget.maxVideoLength.inMilliseconds /
+              totalDuration.inMilliseconds;
+
+          maxLengthPixels = _thumbnailViewerW * fraction!;
+        }
+      } else {
+        maxLengthPixels = _thumbnailViewerW;
+      }
+
+      _videoEndPos = fraction != null
+          ? _videoDuration.toDouble() * fraction!
+          : _videoDuration.toDouble();
+
+      widget.onChangeEnd!(_videoEndPos);
+
+      _endPos = Offset(
+        maxLengthPixels != null ? maxLengthPixels! : _thumbnailViewerW,
+        _thumbnailViewerH,
+      );
+
+      // Defining the tween points
+      _linearTween = Tween(begin: _startPos.dx, end: _endPos.dx);
+      _animationController = AnimationController(
+        vsync: this,
+        duration:
+        Duration(milliseconds: (_videoEndPos - _videoStartPos).toInt()),
+      );
+
+      _scrubberAnimation = _linearTween.animate(_animationController!)
+        ..addListener(() {
+          setState(() {});
+        })
+        ..addStatusListener((status) {
+          if (status == AnimationStatus.completed) {
+            _animationController!.stop();
+          }
+        });
     });
   }
 
   Future<void> _initializeVideoController() async {
+    if (_controllerIsInited) return;
     if (_videoFile != null) {
       videoPlayerController.addListener(() {
         final bool isPlaying = videoPlayerController.value.isPlaying;
@@ -298,6 +315,7 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
 
       videoPlayerController.setVolume(1.0);
       _videoDuration = videoPlayerController.value.duration.inMilliseconds;
+      _controllerIsInited = true;
     }
   }
 

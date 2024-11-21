@@ -3,10 +3,10 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:get_thumbnail_video/index.dart';
-import 'package:transparent_image/transparent_image.dart';
 import 'package:get_thumbnail_video/video_thumbnail.dart';
+import 'package:transparent_image/transparent_image.dart';
 
-class FixedThumbnailViewer extends StatelessWidget {
+class FixedThumbnailViewer extends StatefulWidget {
   final File videoFile;
   final int videoDuration;
   final double thumbnailHeight;
@@ -28,20 +28,27 @@ class FixedThumbnailViewer extends StatelessWidget {
     this.quality = 75,
   }) : super(key: key);
 
+  @override
+  State<FixedThumbnailViewer> createState() => _FixedThumbnailViewerState();
+}
+
+class _FixedThumbnailViewerState extends State<FixedThumbnailViewer> {
+  Uint8List? _firstBytes;
+
   Stream<List<Uint8List?>> generateThumbnail() async* {
-    final String videoPath = videoFile.path;
-    double eachPart = videoDuration / numberOfThumbnails;
+    final String videoPath = widget.videoFile.path;
+    double eachPart = widget.videoDuration / widget.numberOfThumbnails;
     List<Uint8List?> byteList = [];
     // the cache of last thumbnail
     Uint8List? lastBytes;
-    for (int i = 1; i <= numberOfThumbnails; i++) {
+    for (int i = 1; i <= widget.numberOfThumbnails; i++) {
       Uint8List? bytes;
       try {
         bytes = await VideoThumbnail.thumbnailData(
           video: videoPath,
           imageFormat: ImageFormat.JPEG,
           timeMs: (eachPart * i).toInt(),
-          quality: quality,
+          quality: widget.quality,
         );
       } catch (e) {
         debugPrint('ERROR: Couldn\'t generate thumbnails: $e');
@@ -52,9 +59,10 @@ class FixedThumbnailViewer extends StatelessWidget {
       } else {
         bytes = lastBytes;
       }
+      _firstBytes ??= bytes;
       byteList.add(bytes);
-      if (byteList.length == numberOfThumbnails) {
-        onThumbnailLoadingComplete();
+      if (byteList.length == widget.numberOfThumbnails) {
+        widget.onThumbnailLoadingComplete();
       }
       yield byteList;
     }
@@ -67,28 +75,30 @@ class FixedThumbnailViewer extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           List<Uint8List?> imageBytes = snapshot.data!;
+          final firstImageBytes = _firstBytes;
           return Row(
             mainAxisSize: MainAxisSize.max,
             children: List.generate(
-              numberOfThumbnails,
+              widget.numberOfThumbnails,
               (index) => SizedBox(
-                height: thumbnailHeight,
-                width: thumbnailHeight,
+                height: widget.thumbnailHeight,
+                width: widget.thumbnailHeight,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Opacity(
-                      opacity: 0.2,
-                      child: Image.memory(
-                        imageBytes[0] ?? kTransparentImage,
-                        fit: fit,
+                    if (firstImageBytes != null)
+                      Opacity(
+                        opacity: 0.2,
+                        child: Image.memory(
+                          firstImageBytes,
+                          fit: widget.fit,
+                        ),
                       ),
-                    ),
-                    index < imageBytes.length
+                    index < imageBytes.length && imageBytes[index] != null
                         ? FadeInImage(
                             placeholder: MemoryImage(kTransparentImage),
                             image: MemoryImage(imageBytes[index]!),
-                            fit: fit,
+                            fit: widget.fit,
                           )
                         : const SizedBox(),
                   ],
@@ -99,7 +109,7 @@ class FixedThumbnailViewer extends StatelessWidget {
         } else {
           return Container(
             color: Colors.grey[900],
-            height: thumbnailHeight,
+            height: widget.thumbnailHeight,
             width: double.maxFinite,
           );
         }
