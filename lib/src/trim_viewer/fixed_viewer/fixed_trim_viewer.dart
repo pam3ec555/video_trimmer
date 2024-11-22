@@ -68,6 +68,9 @@ class FixedTrimViewer extends StatefulWidget {
 
   final VoidCallback onThumbnailLoadingComplete;
 
+  /// Optional [seekTo] for seeking the player
+  final Function(Duration position)? seekTo;
+
   /// Widget for displaying the video trimmer.
   ///
   /// This has frame wise preview of the video with a
@@ -127,6 +130,7 @@ class FixedTrimViewer extends StatefulWidget {
     this.onChangePlaybackState,
     this.editorProperties = const TrimEditorProperties(),
     this.areaProperties = const FixedTrimAreaProperties(),
+    this.seekTo,
   });
 
   @override
@@ -206,15 +210,19 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
     }
   }
 
+  void _seekTo(Duration position) {
+    widget.seekTo?.call(position) ?? videoPlayerController.seekTo(position);
+  }
+
   void _initViewer() {
     final renderBox =
-    _trimmerAreaKey.currentContext?.findRenderObject() as RenderBox?;
+        _trimmerAreaKey.currentContext?.findRenderObject() as RenderBox?;
     final trimmerActualWidth = renderBox?.size.width;
     log('RENDER BOX: $trimmerActualWidth');
     if (trimmerActualWidth == null) return;
     _thumbnailViewerW = trimmerActualWidth;
     _initializeVideoController();
-    videoPlayerController.seekTo(const Duration(milliseconds: 0));
+    _seekTo(const Duration(milliseconds: 0));
     _numberOfThumbnails = trimmerActualWidth ~/ _thumbnailViewerH;
     log('numberOfThumbnails: $_numberOfThumbnails');
     log('thumbnailViewerW: $_thumbnailViewerW');
@@ -261,7 +269,7 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
       _animationController = AnimationController(
         vsync: this,
         duration:
-        Duration(milliseconds: (_videoEndPos - _videoStartPos).toInt()),
+            Duration(milliseconds: (_videoEndPos - _videoStartPos).toInt()),
       );
 
       _scrubberAnimation = _linearTween.animate(_animationController!)
@@ -415,11 +423,9 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
       _startCircleSize = widget.editorProperties.circleSize;
       _endCircleSize = widget.editorProperties.circleSize;
       if (_dragType == EditorDragType.right) {
-        videoPlayerController
-            .seekTo(Duration(milliseconds: _videoEndPos.toInt()));
+        _seekTo(Duration(milliseconds: _videoEndPos.toInt()));
       } else {
-        videoPlayerController
-            .seekTo(Duration(milliseconds: _videoStartPos.toInt()));
+        _seekTo(Duration(milliseconds: _videoStartPos.toInt()));
       }
     });
   }

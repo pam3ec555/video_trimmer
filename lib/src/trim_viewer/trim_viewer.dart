@@ -90,6 +90,8 @@ class TrimViewer extends StatefulWidget {
   /// thumbnails are loaded.
   final VoidCallback? onThumbnailLoadingComplete;
 
+  final Function(Duration position)? seekTo;
+
   /// Widget for displaying the video trimmer.
   ///
   /// This has frame wise preview of the video with a
@@ -184,6 +186,7 @@ class TrimViewer extends StatefulWidget {
     this.editorProperties = const TrimEditorProperties(),
     this.areaProperties = const TrimAreaProperties(),
     this.onThumbnailLoadingComplete,
+    this.seekTo,
   }) : super(key: key);
 
   @override
@@ -253,6 +256,7 @@ class _TrimViewerState extends State<TrimViewer> with TickerProviderStateMixin {
       onChangeEnd: widget.onChangeEnd,
       onChangePlaybackState: widget.onChangePlaybackState,
       editorProperties: widget.editorProperties,
+      seekTo: widget.seekTo,
       areaProperties: FixedTrimAreaProperties(
         thumbnailFit: widget.areaProperties.thumbnailFit,
         thumbnailQuality: widget.areaProperties.thumbnailQuality,

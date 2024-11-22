@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit_config.dart';
-import 'package:ffmpeg_kit_flutter/return_code.dart';
-import 'package:path/path.dart';
 
+import 'package:ffmpeg_kit_flutter_full_gpl/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_full_gpl/ffmpeg_kit_config.dart';
+import 'package:ffmpeg_kit_flutter_full_gpl/return_code.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_trimmer/src/utils/file_formats.dart';
@@ -223,7 +223,7 @@ class Trimmer {
     }
 
     String trimLengthCommand =
-        ' -ss $startPoint -i "$videoPath" -t ${endPoint - startPoint} -avoid_negative_ts make_zero ';
+        ' -i "$videoPath" -ss $startPoint -t ${endPoint - startPoint} -avoid_negative_ts make_zero ';
 
     if (ffmpegCommand == null) {
       command = '$trimLengthCommand -c:a copy ';
@@ -281,6 +281,7 @@ class Trimmer {
   Future<bool> videoPlaybackControl({
     required double startValue,
     required double endValue,
+    Function(Duration position)? seekTo,
   }) async {
     if (videoPlayerController!.value.isPlaying) {
       await videoPlayerController!.pause();
@@ -288,8 +289,9 @@ class Trimmer {
     } else {
       if (videoPlayerController!.value.position.inMilliseconds >=
           endValue.toInt()) {
-        await videoPlayerController!
-            .seekTo(Duration(milliseconds: startValue.toInt()));
+        final seekDuration = Duration(milliseconds: startValue.toInt());
+        seekTo?.call(seekDuration) ??
+            await videoPlayerController!.seekTo(seekDuration);
         await videoPlayerController!.play();
         return true;
       } else {
