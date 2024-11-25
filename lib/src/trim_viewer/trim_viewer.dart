@@ -123,7 +123,7 @@ class TrimViewer extends StatefulWidget {
   /// output video.
   ///
   ///
-  /// * [circlePaintColor] for specifying a color to the circle.
+  /// * [arrowPaintColor] for specifying a color to the circle.
   /// By default it is set to `Colors.white`.
   ///
   ///

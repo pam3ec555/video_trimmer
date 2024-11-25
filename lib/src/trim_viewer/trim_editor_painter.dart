@@ -10,6 +10,8 @@ class TrimEditorPainter extends CustomPainter {
   /// To define the horizontal length of the selected video area
   final double scrubberAnimationDx;
 
+  final double editorHeight;
+
   /// For specifying a circular border radius
   /// to the corners of the trim area.
   /// By default it is set to `4.0`.
@@ -41,7 +43,7 @@ class TrimEditorPainter extends CustomPainter {
 
   /// For specifying a color to the circle.
   /// By default it is set to `Colors.white`
-  final Color circlePaintColor;
+  final Color arrowPaintColor;
 
   /// For specifying a color to the video
   /// scrubber inside the trim area. By default it is set to
@@ -94,7 +96,7 @@ class TrimEditorPainter extends CustomPainter {
   /// the trim area. By default it is set to `Colors.white`.
   ///
   ///
-  /// * [circlePaintColor] for specifying a color to the circle.
+  /// * [arrowPaintColor] for specifying a color to the circle.
   /// By default it is set to `Colors.white`.
   ///
   ///
@@ -106,6 +108,7 @@ class TrimEditorPainter extends CustomPainter {
     required this.startPos,
     required this.endPos,
     required this.scrubberAnimationDx,
+    required this.editorHeight,
     this.startCircleSize = 0.5,
     this.endCircleSize = 0.5,
     this.borderRadius = 4,
@@ -113,7 +116,7 @@ class TrimEditorPainter extends CustomPainter {
     this.scrubberWidth = 1,
     this.showScrubber = true,
     this.borderPaintColor = Colors.white,
-    this.circlePaintColor = Colors.white,
+    this.arrowPaintColor = Colors.white,
     this.scrubberPaintColor = Colors.white,
   });
 
@@ -123,12 +126,6 @@ class TrimEditorPainter extends CustomPainter {
       ..color = borderPaintColor
       ..strokeWidth = borderWidth
       ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    var circlePaint = Paint()
-      ..color = circlePaintColor
-      ..strokeWidth = 1
-      ..style = PaintingStyle.fill
       ..strokeCap = StrokeCap.round;
 
     var scrubberPaint = Paint()
@@ -154,12 +151,67 @@ class TrimEditorPainter extends CustomPainter {
     }
 
     canvas.drawRRect(roundedRect, borderPaint);
-    // Paint start holder
-    canvas.drawCircle(
-        startPos + Offset(0, endPos.dy / 2), startCircleSize, circlePaint);
-    // Paint end holder
-    canvas.drawCircle(
-        endPos + Offset(0, -endPos.dy / 2), endCircleSize, circlePaint);
+
+    // Paint left arrow background
+    var leftBackgroundRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        startPos.dx,
+        startPos.dy + endPos.dy / 2 - 20,
+        20,
+        editorHeight,
+      ),
+      const Radius.circular(2),
+    );
+    canvas.drawRRect(
+        leftBackgroundRect,
+        Paint()
+          ..color = borderPaintColor
+          ..style = PaintingStyle.fill);
+
+    // Paint right arrow background
+    var rightBackgroundRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        endPos.dx - 20, // Center under the arrow
+        endPos.dy - endPos.dy / 2 - 20, // Center vertically with some padding
+        20, // Width of the background
+        editorHeight,
+      ),
+      const Radius.circular(2),
+    );
+    canvas.drawRRect(
+        rightBackgroundRect,
+        Paint()
+          ..color = borderPaintColor
+          ..style = PaintingStyle.fill);
+
+    // Paint left arrow ("<")
+    var leftArrowPath = Path()
+      ..moveTo(startPos.dx + 14, startPos.dy + endPos.dy / 2 - 10) // Top point
+      ..lineTo(startPos.dx + 4, startPos.dy + endPos.dy / 2) // Center point
+      ..lineTo(
+          startPos.dx + 14, startPos.dy + endPos.dy / 2 + 10); // Bottom point
+    canvas.drawPath(
+        leftArrowPath,
+        Paint()
+          ..color = arrowPaintColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round); // Smooth corners
+
+// Paint right arrow (">")
+    var rightArrowPath = Path()
+      ..moveTo(endPos.dx - 14, endPos.dy - endPos.dy / 2 - 10) // Top point
+      ..lineTo(endPos.dx - 4, endPos.dy - endPos.dy / 2) // Center point
+      ..lineTo(endPos.dx - 14, endPos.dy - endPos.dy / 2 + 10); // Bottom point
+    canvas.drawPath(
+        rightArrowPath,
+        Paint()
+          ..color = arrowPaintColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round); // Smooth corners
   }
 
   @override

@@ -627,10 +627,11 @@ class _ScrollableTrimViewerState extends State<ScrollableTrimViewer>
                   borderRadius: _borderRadius,
                   borderWidth: widget.editorProperties.borderWidth,
                   scrubberWidth: widget.editorProperties.scrubberWidth,
-                  circlePaintColor: widget.editorProperties.circlePaintColor,
+                  arrowPaintColor: widget.editorProperties.arrowPaintColor,
                   borderPaintColor: widget.editorProperties.borderPaintColor,
                   scrubberPaintColor:
                       widget.editorProperties.scrubberPaintColor,
+                  editorHeight: _thumbnailViewerH,
                 ),
                 child: Stack(
                   children: [

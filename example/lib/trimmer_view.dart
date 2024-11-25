@@ -102,7 +102,7 @@ class _TrimmerViewState extends State<TrimmerView> {
                         borderPaintColor: Colors.yellow,
                         borderWidth: 4,
                         borderRadius: 5,
-                        circlePaintColor: Colors.yellow.shade800,
+                        arrowPaintColor: Colors.yellow.shade800,
                       ),
                       areaProperties: TrimAreaProperties.edgeBlur(
                         thumbnailQuality: 10,
