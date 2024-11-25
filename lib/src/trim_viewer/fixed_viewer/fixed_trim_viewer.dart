@@ -507,6 +507,7 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                 borderPaintColor: widget.editorProperties.borderPaintColor,
                 scrubberPaintColor: widget.editorProperties.scrubberPaintColor,
                 editorHeight: _thumbnailViewerH,
+                editorWidth: _thumbnailViewerW,
               ),
               child: ClipRRect(
                 borderRadius:

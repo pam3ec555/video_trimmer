@@ -11,6 +11,7 @@ class TrimEditorPainter extends CustomPainter {
   final double scrubberAnimationDx;
 
   final double editorHeight;
+  final double editorWidth;
 
   /// For specifying a circular border radius
   /// to the corners of the trim area.
@@ -109,6 +110,7 @@ class TrimEditorPainter extends CustomPainter {
     required this.endPos,
     required this.scrubberAnimationDx,
     required this.editorHeight,
+    required this.editorWidth,
     this.startCircleSize = 0.5,
     this.endCircleSize = 0.5,
     this.borderRadius = 4,
@@ -151,6 +153,36 @@ class TrimEditorPainter extends CustomPainter {
     }
 
     canvas.drawRRect(roundedRect, borderPaint);
+
+    // Left transparent background
+    var leftTransparentRect = RRect.fromRectAndRadius(
+      Rect.fromLTRB(0, // Extend further to the left of the arrow
+        startPos.dy + endPos.dy / 2 - 20.5, // Center vertically
+        startPos.dx, // Width of the transparent background
+        editorHeight + 1, // Height matching the arrow background
+      ),
+      Radius.circular(borderRadius),
+    );
+    canvas.drawRRect(
+        leftTransparentRect,
+        Paint()
+          ..color = Colors.white.withOpacity(0.7) // Semi-transparent color
+          ..style = PaintingStyle.fill);
+
+    // Right transparent background
+    var rightTransparentRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(endPos.dx, // Extend further to the right of the arrow
+        endPos.dy - endPos.dy / 2 - 20.5, // Center vertically
+        editorWidth - endPos.dx, // Width of the transparent background
+        editorHeight + 3, // Height matching the arrow background)
+      ),
+      Radius.circular(borderRadius),
+    );
+    canvas.drawRRect(
+        rightTransparentRect,
+        Paint()
+          ..color = Colors.white.withOpacity(0.7) // Semi-transparent color
+          ..style = PaintingStyle.fill);
 
     // Paint left arrow background
     var leftBackgroundRect = RRect.fromRectAndCorners(
@@ -201,7 +233,7 @@ class TrimEditorPainter extends CustomPainter {
           ..strokeCap = StrokeCap.round
           ..strokeJoin = StrokeJoin.round); // Smooth corners
 
-// Paint right arrow (">")
+    // Paint right arrow (">")
     var rightArrowPath = Path()
       ..moveTo(endPos.dx - 5, endPos.dy - endPos.dy / 2 - 10) // Top point
       ..lineTo(endPos.dx + 5, endPos.dy - endPos.dy / 2) // Center point
