@@ -204,7 +204,10 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
   didUpdateWidget(FixedTrimViewer oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.viewerWidth != widget.viewerWidth) {
-      SchedulerBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        _thumbnailViewerW = 0;
+      });
+      SchedulerBinding.instance.addPostFrameCallback((_) async {
         _initViewer();
       });
     }
@@ -213,6 +216,8 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
   void _seekTo(Duration position) {
     widget.seekTo?.call(position) ?? videoPlayerController.seekTo(position);
   }
+
+  static const double _trimmerInnerPadding = 32;
 
   void _initViewer() {
     final renderBox =
@@ -227,7 +232,8 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
     log('numberOfThumbnails: $_numberOfThumbnails');
     log('thumbnailViewerW: $_thumbnailViewerW');
     setState(() {
-      _thumbnailViewerW = _numberOfThumbnails * _thumbnailViewerH;
+      _thumbnailViewerW =
+          _numberOfThumbnails * _thumbnailViewerH + _trimmerInnerPadding;
 
       final FixedThumbnailViewer thumbnailWidget = FixedThumbnailViewer(
         videoFile: _videoFile!,
@@ -336,12 +342,12 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
     debugPrint((_endPos.dx - details.localPosition.dx).abs().toString());
 
     final startDifference = _startPos.dx - details.localPosition.dx;
-    final endDifference = _endPos.dx - details.localPosition.dx;
+    final endDifference = _endPos.dx + details.localPosition.dx;
 
     // First we determine whether the dragging motion should be allowed. The allowed
     // zone is widget.sideTapSize (left) + frame (center) + widget.sideTapSize (right)
     if (startDifference <= widget.editorProperties.sideTapSize &&
-        endDifference >= -widget.editorProperties.sideTapSize) {
+        endDifference >= widget.editorProperties.sideTapSize) {
       _allowDrag = true;
     } else {
       debugPrint("Dragging is outside of frame, ignoring gesture...");
@@ -448,70 +454,76 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
       onHorizontalDragStart: _onDragStart,
       onHorizontalDragUpdate: _onDragUpdate,
       onHorizontalDragEnd: _onDragEnd,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          widget.showDuration
-              ? SizedBox(
-                  width: _thumbnailViewerW,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      mainAxisSize: MainAxisSize.max,
-                      children: <Widget>[
-                        Text(
-                          Duration(milliseconds: _videoStartPos.toInt())
-                              .format(widget.durationStyle),
-                          style: widget.durationTextStyle,
-                        ),
-                        videoPlayerController.value.isPlaying
-                            ? Text(
-                                Duration(milliseconds: _currentPosition.toInt())
-                                    .format(widget.durationStyle),
-                                style: widget.durationTextStyle,
-                              )
-                            : Container(),
-                        Text(
-                          Duration(milliseconds: _videoEndPos.toInt())
-                              .format(widget.durationStyle),
-                          style: widget.durationTextStyle,
-                        ),
-                      ],
+      behavior: HitTestBehavior.translucent,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: _trimmerInnerPadding),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            widget.showDuration
+                ? SizedBox(
+                    width: _thumbnailViewerW,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisSize: MainAxisSize.max,
+                        children: <Widget>[
+                          Text(
+                            Duration(milliseconds: _videoStartPos.toInt())
+                                .format(widget.durationStyle),
+                            style: widget.durationTextStyle,
+                          ),
+                          videoPlayerController.value.isPlaying
+                              ? Text(
+                                  Duration(
+                                          milliseconds:
+                                              _currentPosition.toInt())
+                                      .format(widget.durationStyle),
+                                  style: widget.durationTextStyle,
+                                )
+                              : Container(),
+                          Text(
+                            Duration(milliseconds: _videoEndPos.toInt())
+                                .format(widget.durationStyle),
+                            style: widget.durationTextStyle,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                )
-              : Container(),
-          CustomPaint(
-            foregroundPainter: TrimEditorPainter(
-              startPos: _startPos,
-              endPos: _endPos,
-              scrubberAnimationDx: _scrubberAnimation?.value ?? 0,
-              startCircleSize: _startCircleSize,
-              endCircleSize: _endCircleSize,
-              borderRadius: _borderRadius,
-              borderWidth: widget.editorProperties.borderWidth,
-              scrubberWidth: widget.editorProperties.scrubberWidth,
-              arrowPaintColor: widget.editorProperties.arrowPaintColor,
-              borderPaintColor: widget.editorProperties.borderPaintColor,
-              scrubberPaintColor: widget.editorProperties.scrubberPaintColor,
-              editorHeight: _thumbnailViewerH,
-            ),
-            child: ClipRRect(
-              borderRadius:
-                  BorderRadius.circular(widget.areaProperties.borderRadius),
-              child: Container(
-                key: _trimmerAreaKey,
-                color: Colors.grey[900],
-                height: _thumbnailViewerH,
-                width: _thumbnailViewerW == 0.0
-                    ? widget.viewerWidth
-                    : _thumbnailViewerW,
-                child: thumbnailWidget ?? Container(),
+                  )
+                : Container(),
+            CustomPaint(
+              foregroundPainter: TrimEditorPainter(
+                startPos: _startPos,
+                endPos: _endPos,
+                scrubberAnimationDx: _scrubberAnimation?.value ?? 0,
+                startCircleSize: _startCircleSize,
+                endCircleSize: _endCircleSize,
+                borderRadius: _borderRadius,
+                borderWidth: widget.editorProperties.borderWidth,
+                scrubberWidth: widget.editorProperties.scrubberWidth,
+                arrowPaintColor: widget.editorProperties.arrowPaintColor,
+                borderPaintColor: widget.editorProperties.borderPaintColor,
+                scrubberPaintColor: widget.editorProperties.scrubberPaintColor,
+                editorHeight: _thumbnailViewerH,
+              ),
+              child: ClipRRect(
+                borderRadius:
+                    BorderRadius.circular(widget.areaProperties.borderRadius),
+                child: Container(
+                  key: _trimmerAreaKey,
+                  color: Colors.grey[900],
+                  height: _thumbnailViewerH,
+                  width: _thumbnailViewerW == 0.0
+                      ? widget.viewerWidth
+                      : _thumbnailViewerW,
+                  child: thumbnailWidget ?? Container(),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

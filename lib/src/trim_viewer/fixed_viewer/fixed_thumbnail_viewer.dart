@@ -78,6 +78,7 @@ class _FixedThumbnailViewerState extends State<FixedThumbnailViewer> {
           final firstImageBytes = _firstBytes;
           return Row(
             mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: List.generate(
               widget.numberOfThumbnails,
               (index) => SizedBox(
