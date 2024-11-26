@@ -156,32 +156,34 @@ class TrimEditorPainter extends CustomPainter {
 
     // Left transparent background
     var leftTransparentRect = RRect.fromRectAndRadius(
-      Rect.fromLTRB(0, // Extend further to the left of the arrow
-        startPos.dy + endPos.dy / 2 - 20.5, // Center vertically
-        startPos.dx, // Width of the transparent background
-        editorHeight + 1, // Height matching the arrow background
+      Rect.fromLTRB(
+        0,
+        startPos.dy + endPos.dy / 2 - 20.5,
+        startPos.dx,
+        editorHeight + 1,
       ),
       Radius.circular(borderRadius),
     );
     canvas.drawRRect(
         leftTransparentRect,
         Paint()
-          ..color = Colors.white.withOpacity(0.7) // Semi-transparent color
+          ..color = Colors.white.withOpacity(0.7)
           ..style = PaintingStyle.fill);
 
     // Right transparent background
     var rightTransparentRect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(endPos.dx, // Extend further to the right of the arrow
-        endPos.dy - endPos.dy / 2 - 20.5, // Center vertically
-        editorWidth - endPos.dx, // Width of the transparent background
-        editorHeight + 3, // Height matching the arrow background)
+      Rect.fromLTWH(
+        endPos.dx,
+        endPos.dy - endPos.dy / 2 - 20.5,
+        editorWidth - endPos.dx,
+        editorHeight + 3,
       ),
       Radius.circular(borderRadius),
     );
     canvas.drawRRect(
         rightTransparentRect,
         Paint()
-          ..color = Colors.white.withOpacity(0.7) // Semi-transparent color
+          ..color = Colors.white.withOpacity(0.7)
           ..style = PaintingStyle.fill);
 
     // Paint left arrow background
@@ -204,9 +206,9 @@ class TrimEditorPainter extends CustomPainter {
     // Paint right arrow background
     var rightBackgroundRect = RRect.fromRectAndCorners(
       Rect.fromLTWH(
-        endPos.dx - 10, // Center under the arrow
-        endPos.dy - endPos.dy / 2 - 20.5, // Center vertically with some padding
-        20, // Width of the background
+        endPos.dx,
+        endPos.dy - endPos.dy / 2 - 20.5,
+        20,
         editorHeight + 3,
       ),
       topRight: Radius.circular(borderRadius),
@@ -220,10 +222,10 @@ class TrimEditorPainter extends CustomPainter {
 
     // Paint left arrow ("<")
     var leftArrowPath = Path()
-      ..moveTo(startPos.dx - 4, startPos.dy + endPos.dy / 2 - 10) // Top point
-      ..lineTo(startPos.dx - 14, startPos.dy + endPos.dy / 2) // Center point
+      ..moveTo(startPos.dx - 4, startPos.dy + endPos.dy / 2 - 10)
+      ..lineTo(startPos.dx - 14, startPos.dy + endPos.dy / 2)
       ..lineTo(
-          startPos.dx - 4, startPos.dy + endPos.dy / 2 + 10); // Bottom point
+          startPos.dx - 4, startPos.dy + endPos.dy / 2 + 10);
     canvas.drawPath(
         leftArrowPath,
         Paint()
@@ -231,13 +233,13 @@ class TrimEditorPainter extends CustomPainter {
           ..style = PaintingStyle.stroke
           ..strokeWidth = 3
           ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round); // Smooth corners
+          ..strokeJoin = StrokeJoin.round);
 
     // Paint right arrow (">")
     var rightArrowPath = Path()
-      ..moveTo(endPos.dx - 5, endPos.dy - endPos.dy / 2 - 10) // Top point
-      ..lineTo(endPos.dx + 5, endPos.dy - endPos.dy / 2) // Center point
-      ..lineTo(endPos.dx - 5, endPos.dy - endPos.dy / 2 + 10); // Bottom point
+      ..moveTo(endPos.dx + 5, endPos.dy - endPos.dy / 2 - 10)
+      ..lineTo(endPos.dx + 15, endPos.dy - endPos.dy / 2)
+      ..lineTo(endPos.dx + 5, endPos.dy - endPos.dy / 2 + 10);
     canvas.drawPath(
         rightArrowPath,
         Paint()
@@ -245,7 +247,7 @@ class TrimEditorPainter extends CustomPainter {
           ..style = PaintingStyle.stroke
           ..strokeWidth = 3
           ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round); // Smooth corners
+          ..strokeJoin = StrokeJoin.round);
   }
 
   @override

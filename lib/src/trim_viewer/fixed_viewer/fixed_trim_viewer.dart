@@ -233,7 +233,7 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
     log('thumbnailViewerW: $_thumbnailViewerW');
     setState(() {
       _thumbnailViewerW =
-          _numberOfThumbnails * _thumbnailViewerH + _trimmerInnerPadding;
+          _numberOfThumbnails * _thumbnailViewerH;
 
       final FixedThumbnailViewer thumbnailWidget = FixedThumbnailViewer(
         videoFile: _videoFile!,
